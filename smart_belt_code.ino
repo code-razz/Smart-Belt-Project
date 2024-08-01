@@ -1,25 +1,3 @@
-#include <Arduino.h>
-#include <WiFi.h>
-#include <Firebase_ESP_Client.h>
-#include "addons/TokenHelper.h"
-#include "addons/RTDBHelper.h"
-// define your wifi credentials here
-#define WIFI_SSID "motog62"
-#define WIFI_PASSWORD "happiness"
-#define API_KEY "AIzaSyBOlLTy-2cFMYIbcWD2RkAp3pmBpO_ogeU"
-#define DATABASE_URL "https://awesomebelt-974da-default-rtdb.firebaseio.com" 
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
-// int pushButtonState = 0;
-unsigned long sendDataPrevMillis = 0;
-int count = 0;
-bool signupOK = false;
-
-
-
-
-
 #include "pitches.h"
 
 #define LEDC_CHANNEL 0
@@ -42,11 +20,9 @@ int distance_front= 30;    //Threshold distance
 int distance_back= 30;
 int distance_left= 30;
 int distance_right= 30;
-int distance_depth= 30;
 
 
 //Functions
-
 void buzzer(int trigpin){
   int melody[] = {
     NOTE_C2,
@@ -121,31 +97,6 @@ void ultrasonic_func(int trigpin,int echopin,int dist,int hapticPin){
 
 void setup() {
   // put your setup code here, to run once:
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED){
-    Serial.print(".");
-    delay(300);
-  }
-  Serial.println();
-  Serial.print("Connected with IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
-  config.api_key = "AIzaSyBOlLTy-2cFMYIbcWD2RkAp3pmBpO_ogeU";
-  config.database_url = "https://awesomebelt-974da-default-rtdb.firebaseio.com";
-
-  if (Firebase.signUp(&config, &auth, "", "")){
-    Serial.println("ok");
-    signupOK = true;
-  }
-  else{
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
-  }
-  config.token_status_callback = tokenStatusCallback;
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
- 
-
   pinMode(trig_front,OUTPUT);
   pinMode(echo_front,INPUT);
   pinMode(trig_back,OUTPUT);
@@ -165,21 +116,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
   int button=digitalRead(buttonPin);
   if(button==1){
     Serial.println("Send emergency alert and location");
-    if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)){
-        sendDataPrevMillis = millis();
-        if (Firebase.RTDB.setInt(&fbdo, "test/int", 1)){
-        Serial.println("PASSED");
-        Serial.println("PATH: " + fbdo.dataPath());
-        Serial.println("TYPE: " + fbdo.dataType());
-        }
-        else {
-        Firebase.RTDB.setInt(&fbdo, "test/int",0);
-        }
-    }
   }
 
   Serial.println("front");
@@ -191,5 +130,5 @@ void loop() {
   Serial.println("back");
   ultrasonic_func(trig_back,echo_back,distance_back,haptic_back);
   Serial.println("");
-  delay(1000);
+  delay(500);
 }
